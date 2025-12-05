@@ -3,20 +3,16 @@ package dev.latvian.apps.nbt;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public final class NBTCompoundTag extends LinkedHashMap<String, NBTTag> implements NBTTag {
 	public static NBTCompoundTag read(DataInput in) throws IOException {
@@ -33,7 +29,10 @@ public final class NBTCompoundTag extends LinkedHashMap<String, NBTTag> implemen
 	}
 
 	public static NBTCompoundTag readFully(InputStream in) throws IOException {
-		return read(new DataInputStream(in));
+		var data = new DataInputStream(in);
+		data.readByte();
+		data.readUTF();
+		return read(data);
 	}
 
 	public static NBTCompoundTag readFullyCompressed(InputStream in) throws IOException {
@@ -137,25 +136,5 @@ public final class NBTCompoundTag extends LinkedHashMap<String, NBTTag> implemen
 		var builder = new StringBuilder();
 		toString(builder);
 		return builder.toString();
-	}
-
-	public void writeFully(OutputStream out) throws IOException {
-		write(new DataOutputStream(out));
-	}
-
-	public void writeFullyCompressed(OutputStream out) throws IOException {
-		writeFully(new BufferedOutputStream(new GZIPOutputStream(out)));
-	}
-
-	public void write(Path path) throws IOException {
-		try (var out = new BufferedOutputStream(Files.newOutputStream(path))) {
-			writeFully(out);
-		}
-	}
-
-	public void writeCompressed(Path path) throws IOException {
-		try (var out = new BufferedOutputStream(Files.newOutputStream(path))) {
-			writeFullyCompressed(out);
-		}
 	}
 }
